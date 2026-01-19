@@ -61,28 +61,87 @@ body {
     padding-bottom: 20px !important;
 }
 
+/* ========== HEADER С TELEGRAM ТЕМОЙ ========== */
+header {
+    background: linear-gradient(to right, var(--tg-theme-button-color, #4CAF50), var(--tg-theme-link-color, #2E7D32)) !important;
+    color: var(--tg-theme-button-text-color, white) !important;
+    padding: 20px;
+    text-align: center;
+    border-radius: 0 !important;
+    position: relative;
+    padding-left: 70px;
+}
+
+.menu-button {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: var(--tg-theme-button-text-color, white);
+    font-size: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+}
+
+.menu-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: none;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 5px;
+    color: var(--tg-theme-button-text-color, white) !important;
+}
+
+.subtitle {
+    opacity: 0.9;
+    font-size: 14px;
+    color: var(--tg-theme-hint-color, rgba(255,255,255,0.9)) !important;
+}
+
 /* ========== SIDEBAR МЕНЮ (Telegram стиль) ========== */
 .sidebar {
     position: fixed;
     top: 0;
-    left: -280px;
+    right: -300px;
     width: 280px;
     height: 100%;
-    background: var(--tg-theme-secondary-bg-color, #f8f9fa);
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    background: var(--tg-theme-bg-color, white);
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
     z-index: 2000;
-    transition: left 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: right 0.3s ease;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    border-right: 1px solid var(--tg-theme-section-bg-color, #e7e7e7);
-    will-change: transform;
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
 .sidebar.active {
-    left: 0;
+    right: 0;
 }
 
 .sidebar-overlay {
@@ -96,7 +155,6 @@ body {
     display: none;
     opacity: 0;
     transition: opacity 0.3s ease;
-    backdrop-filter: blur(2px);
 }
 
 .sidebar-overlay.active {
@@ -105,71 +163,55 @@ body {
 }
 
 .sidebar-header {
-    padding: 25px 20px 20px;
-    background: var(--tg-theme-bg-color, white);
-    border-bottom: 1px solid var(--tg-theme-section-bg-color, #e7e7e7);
+    padding: 20px;
+    border-bottom: 1px solid var(--tg-theme-section-bg-color, #e9ecef);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.sidebar-user-info {
+.sidebar-header h3 {
+    margin: 0;
+    color: var(--tg-theme-text-color, #333);
+    font-size: 18px;
+}
+
+.close-sidebar {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--tg-theme-hint-color, #666);
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 15px;
+    justify-content: center;
+    transition: all 0.3s;
 }
 
-.sidebar-user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: none;
-    border: 2px solid var(--tg-theme-button-color, #40a7e3);
-}
-
-.sidebar-user-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--tg-theme-text-color, #000000);
-}
-
-.sidebar-app-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--tg-theme-link-color, #168acd);
-    margin-bottom: 5px;
-}
-
-.sidebar-app-subtitle {
-    font-size: 12px;
-    color: var(--tg-theme-hint-color, #999999);
-    opacity: 0.8;
+.close-sidebar:hover {
+    background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+    transform: scale(1.1);
 }
 
 .sidebar-menu {
-    padding: 15px 0;
-    background: var(--tg-theme-secondary-bg-color, #f1f1f1);
+    padding: 10px 0;
 }
 
 .menu-item {
     padding: 16px 20px;
-    color: var(--tg-theme-text-color, #000000);
+    color: var(--tg-theme-text-color, #333);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease;
     display: flex;
     align-items: center;
     gap: 12px;
-    border-left: 4px solid transparent;
-    background: var(--tg-theme-secondary-bg-color, #f1f1f1);
 }
 
 .menu-item:hover {
-    background: var(--tg-theme-section-bg-color, #ffffff);
-    border-left-color: var(--tg-theme-button-color, #40a7e3);
-}
-
-.menu-item.active {
-    background: var(--tg-theme-section-bg-color, #ffffff);
-    border-left-color: var(--tg-theme-button-color, #40a7e3);
-    font-weight: 500;
+    background: var(--tg-theme-secondary-bg-color, #f8f9fa);
 }
 
 .menu-item span {
@@ -178,39 +220,8 @@ body {
 
 .menu-divider {
     height: 1px;
-    background: var(--tg-theme-section-bg-color, #e7e7e7);
-    margin: 8px 20px;
-}
-
-.menu-button {
-    position: fixed;
-    left: 15px;
-    top: 15px;
-    background: var(--tg-theme-button-color, #40a7e3);
-    border: none;
-    color: var(--tg-theme-button-text-color, white);
-    font-size: 18px;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    box-shadow: 0 2px 8px rgba(64, 167, 227, 0.3);
-    transition: all 0.3s ease;
-}
-
-.menu-button:hover {
-    background: var(--tg-theme-link-color, #168acd);
-    transform: scale(1.05);
-}
-
-/* Сдвиг контента для кнопки меню */
-.screen.active {
-    padding-top: 60px; /* Отступ для кнопки меню */
-    animation: fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    background: var(--tg-theme-section-bg-color, #e9ecef);
+    margin: 10px 20px;
 }
 
 /* ========== TABS (СКРЫТЫ) ========== */
@@ -221,7 +232,6 @@ body {
 /* ========== SCREENS ========== */
 .screen {
     display: none;
-    padding-top: 60px; /* Отступ для кнопки меню */
 }
 
 .screen.active {
@@ -230,14 +240,8 @@ body {
 }
 
 @keyframes fadeIn {
-    from { 
-        opacity: 0; 
-        transform: translateY(15px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ========== BUTTONS С TELEGRAM ТЕМОЙ ========== */
@@ -410,7 +414,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .delete-habit {
-    background: var(--tg-theme-destructive-text-color, #d14e4e);
+    background: #dc3545;
     color: white;
     border: none;
     width: 36px;
@@ -968,7 +972,6 @@ footer {
     
     .sidebar {
         width: 260px;
-        left: -260px;
     }
 }
 
@@ -1048,7 +1051,6 @@ footer {
     
     .sidebar {
         width: 240px;
-        left: -240px;
     }
 }
 
@@ -1083,19 +1085,14 @@ footer {
 
 </head>
 <body>
-    <!-- Боковое меню слева -->
+    <!-- Боковое меню -->
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <div class="sidebar-user-info">
-                <img id="sidebarUserAvatar" class="sidebar-user-avatar" src="" alt="">
-                <div class="sidebar-user-name" id="sidebarUserName">Загрузка...</div>
-            </div>
-            <div class="sidebar-app-title">📋 Планировщик привычек</div>
-            <div class="sidebar-app-subtitle">В Telegram Mini App</div>
+            <h3>Меню</h3>
+            <button class="close-sidebar haptic" onclick="toggleSidebar()">×</button>
         </div>
-        
         <div class="sidebar-menu">
-            <div class="menu-item haptic active" onclick="showScreen('planner'); toggleSidebar()">
+            <div class="menu-item haptic" onclick="showScreen('planner'); toggleSidebar()">
                 <span>📋 Планировщик</span>
             </div>
             <div class="menu-item haptic" onclick="showScreen('calendar'); toggleSidebar()">
@@ -1107,19 +1104,38 @@ footer {
             <div class="menu-item haptic" onclick="showScreen('statistics'); toggleSidebar()">
                 <span>📊 Статистика</span>
             </div>
+            <div class="menu-divider"></div>
+            <div class="menu-item haptic" onclick="toggleSidebar()">
+                <span>← Закрыть меню</span>
+            </div>
         </div>
     </div>
     
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
     
     <div class="container">
-        <!-- Кнопка меню вверху слева -->
-        <button id="menuButton" class="menu-button haptic" onclick="toggleSidebar()">☰</button>
+        <header>
+            <button id="menuButton" class="menu-button haptic" onclick="toggleSidebar()">☰</button>
+            <h1>📋 Планировщик привычек</h1>
+            <div class="subtitle">В Telegram Mini App</div>
+            <div class="user-info">
+                <img id="userAvatar" class="user-avatar" src="" alt="">
+                <span id="userName">Загрузка...</span>
+            </div>
+        </header>
+        
+        <!-- Скрытые вкладки -->
+        <div class="tabs">
+            <div class="tab active haptic" onclick="showScreen('planner')">Планировщик</div>
+            <div class="tab haptic" onclick="showScreen('calendar')">Календарь</div>
+            <div class="tab haptic" onclick="showScreen('day')">Сегодня</div>
+            <div class="tab haptic" onclick="showScreen('statistics')">Статистика</div>
+        </div>
         
         <div class="content">
             <!-- Экран 1: Планировщик привычек -->
             <div id="planner-screen" class="screen active">
-                <h2 style="margin-top: 0;">Создайте свои привычки</h2>
+                <h2>Создайте свои привычки</h2>
                 <p style="margin: 10px 0 20px; color: var(--tg-theme-hint-color, #6c757d);">Добавьте привычки, которые хотите развивать</p>
                 
                 <div class="add-habit-form">
@@ -1198,7 +1214,7 @@ footer {
             
             <!-- Экран 4: Статистика -->
             <div id="statistics-screen" class="screen">
-                <h2 style="margin-top: 0;">Статистика выполнения привычек</h2>
+                <h2>Статистика выполнения привычек</h2>
                 <p style="margin: 10px 0 20px; color: var(--tg-theme-hint-color, #6c757d);">Анализируйте ваш прогресс</p>
                 
                 <div class="statistics-container">
@@ -1302,6 +1318,13 @@ footer {
                     getItem: (key, callback) => {
                         const value = localStorage.getItem(key);
                         if (callback) callback(null, value);
+                    },
+                    getItems: (keys, callback) => {
+                        const result = {};
+                        keys.forEach(key => {
+                            result[key] = localStorage.getItem(key);
+                        });
+                        if (callback) callback(null, result);
                     }
                 },
                 expand: () => console.log('Расширяем на весь экран'),
@@ -1325,10 +1348,6 @@ footer {
         let editHabitType = 'checkbox';
         let editingHabitId = null;
         let sidebarOpen = false;
-        let activeMenuItem = 'planner';
-        let isSwiping = false;
-        let startX = 0;
-        let startY = 0;
         
         // Данные приложения
         let appData = {
@@ -1361,17 +1380,23 @@ footer {
             // Расширяем на весь экран
             tg.expand();
             
-            // Устанавливаем тему Telegram
-            applyTelegramTheme();
+            // Устанавливаем тему
+            document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
+            document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000');
+            document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#999999');
+            document.documentElement.style.setProperty('--tg-theme-link-color', tg.themeParams.link_color || '#4CAF50');
+            document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#4CAF50');
+            document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
+            document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f1f1f1');
             
             // Показываем информацию о пользователе
             if (tg.initDataUnsafe.user) {
                 const user = tg.initDataUnsafe.user;
-                document.getElementById('sidebarUserName').textContent = 
+                document.getElementById('userName').textContent = 
                     user.first_name + (user.last_name ? ' ' + user.last_name : '');
                 
                 if (user.photo_url) {
-                    const avatar = document.getElementById('sidebarUserAvatar');
+                    const avatar = document.getElementById('userAvatar');
                     avatar.src = user.photo_url;
                     avatar.style.display = 'block';
                 }
@@ -1385,22 +1410,6 @@ footer {
             
             // Загружаем данные из Telegram Cloud
             loadFromTelegramCloud();
-        }
-        
-        // Применение темы Telegram
-        function applyTelegramTheme() {
-            if (!tg.themeParams) return;
-            
-            // Основные цвета темы
-            document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
-            document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000');
-            document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#999999');
-            document.documentElement.style.setProperty('--tg-theme-link-color', tg.themeParams.link_color || '#168acd');
-            document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#40a7e3');
-            document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
-            document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f1f1f1');
-            document.documentElement.style.setProperty('--tg-theme-section-bg-color', tg.themeParams.section_bg_color || '#ffffff');
-            document.documentElement.style.setProperty('--tg-theme-destructive-text-color', tg.themeParams.destructive_text_color || '#d14e4e');
         }
         
         // ========== TELEGRAM CLOUD STORAGE ==========
@@ -1482,104 +1491,36 @@ footer {
             }
         }
         
-        // Инициализация свайпов с улучшенной анимацией
+        // Инициализация свайпов
         function initSwipeGestures() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
+            let startX = 0;
+            let startY = 0;
             
-            // Обработчик начала свайпа
             document.addEventListener('touchstart', function(e) {
-                if (e.touches.length !== 1) return;
-                
                 startX = e.touches[0].clientX;
                 startY = e.touches[0].clientY;
-                isSwiping = false;
-                
-                // Если касание у левого края экрана и меню закрыто
-                if (startX < 30 && !sidebarOpen) {
-                    isSwiping = true;
-                    e.preventDefault();
-                }
-                // Если меню открыто и касание в любом месте
-                else if (sidebarOpen) {
-                    isSwiping = true;
-                }
-            }, { passive: false });
+            }, { passive: true });
             
-            // Обработчик движения при свайпе
-            document.addEventListener('touchmove', function(e) {
-                if (!isSwiping || e.touches.length !== 1) return;
-                
-                e.preventDefault();
-                
-                const currentX = e.touches[0].clientX;
-                const currentY = e.touches[0].clientY;
-                const diffX = currentX - startX;
-                const diffY = currentY - startY;
-                
-                // Если горизонтальное движение больше вертикального
-                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 5) {
-                    // Открытие меню (свайп слева направо)
-                    if (diffX > 0 && !sidebarOpen && startX < 30) {
-                        const progress = Math.min(diffX / 280, 1);
-                        sidebar.style.transform = `translateX(${progress * 280}px)`;
-                        overlay.style.opacity = (progress * 0.5).toString();
-                        overlay.style.display = 'block';
-                    }
-                    // Закрытие меню (свайп справа налево)
-                    else if (diffX < 0 && sidebarOpen) {
-                        const progress = Math.min(Math.abs(diffX) / 280, 1);
-                        sidebar.style.transform = `translateX(${-(progress * 280)}px)`;
-                        overlay.style.opacity = (0.5 - progress * 0.5).toString();
-                    }
-                }
-            }, { passive: false });
-            
-            // Обработчик окончания свайпа
             document.addEventListener('touchend', function(e) {
-                if (!isSwiping) return;
-                
                 const endX = e.changedTouches[0].clientX;
                 const endY = e.changedTouches[0].clientY;
                 const diffX = endX - startX;
                 const diffY = endY - startY;
                 
-                // Сброс трансформации
-                sidebar.style.transform = '';
-                overlay.style.opacity = '';
-                
-                // Определяем, достаточно ли сильный свайп
-                const isSignificantSwipe = Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY);
-                
-                if (isSignificantSwipe) {
-                    // Свайп слева направо для открытия
-                    if (diffX > 0 && !sidebarOpen && startX < 30) {
+                // Если горизонтальный свайп больше вертикального
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                    // Свайп слева направо для открытия меню
+                    if (diffX > 50 && !sidebarOpen && startX < 50) {
                         toggleSidebar();
                     }
-                    // Свайп справа налево для закрытия
-                    else if (diffX < 0 && sidebarOpen) {
+                    // Свайп справа налево для закрытия меню
+                    else if (diffX < -50 && sidebarOpen) {
                         toggleSidebar();
-                    }
-                } else {
-                    // Если свайп был незначительный, возвращаем в исходное состояние
-                    if (sidebarOpen) {
-                        overlay.style.display = 'block';
-                    } else {
-                        overlay.style.display = 'none';
                     }
                 }
-                
-                isSwiping = false;
             }, { passive: true });
             
-            // Закрытие меню при клике на оверлей
-            overlay.addEventListener('click', function(e) {
-                if (e.target === overlay && sidebarOpen) {
-                    toggleSidebar();
-                }
-            });
-            
-            // Закрытие меню при нажатии кнопки "Назад" на устройстве
+            // Кнопка "Назад" на устройстве
             window.addEventListener('popstate', function() {
                 if (sidebarOpen) {
                     toggleSidebar();
@@ -1715,13 +1656,6 @@ footer {
             
             // Показать выбранный экран
             document.getElementById(screenId + '-screen').classList.add('active');
-            
-            // Обновить активный пункт меню
-            activeMenuItem = screenId;
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            document.querySelector(`.menu-item[onclick*="${screenId}"]`).classList.add('active');
             
             // Обновить контент экрана
             if (screenId === 'calendar') {
@@ -2096,28 +2030,13 @@ footer {
                 const month = currentDate.getMonth();
                 const year = currentDate.getFullYear();
                 
-                const message = `📊 Мой прогресс по привычкам за ${day}.${month + 1}.${year}:\n\n${text}\n\n👉 Используй приложение: https://t.me/Habits_tracker_itlexsvz_bot/habits`;
+                const message = `📊 Мой прогресс по привычкам за ${day}.${month + 1}.${year}:\n\n${text}`;
                 
-                // Используем Telegram Share API для нативного диалога выбора чата
-                if (tg && tg.shareToChat) {
-                    tg.shareToChat(message, (success) => {
-                        if (success) {
-                            showNotification('✅ Сообщение отправлено');
-                            if (tg.HapticFeedback) {
-                                tg.HapticFeedback.impactOccurred('medium');
-                            }
-                        } else {
-                            showNotification('❌ Не удалось отправить сообщение');
-                        }
-                    });
-                } else {
-                    // Fallback для старых версий Telegram
-                    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(message)}`;
-                    window.open(shareUrl, '_blank', 'noopener,noreferrer');
-                    
-                    if (tg && tg.HapticFeedback) {
-                        tg.HapticFeedback.impactOccurred('medium');
-                    }
+                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(message)}`;
+                window.open(shareUrl, '_blank');
+                
+                if (tg && tg.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred('medium');
                 }
             } else {
                 // Вне Telegram - показываем сообщение
@@ -2138,7 +2057,7 @@ footer {
                 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
             ];
             
-            let shareText = `📊 Мой прогресс по привычкам за ${day} ${monthNamesRu[month]} ${year}:\n\n`;
+            let shareText = `📊 Мой прогресс за ${day} ${monthNamesRu[month]} ${year}\n\n`;
             
             let completedCount = 0;
             let totalCount = appData.habits.length;
