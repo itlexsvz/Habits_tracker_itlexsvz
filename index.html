@@ -222,6 +222,7 @@ h1 {
     align-items: center;
     justify-content: center;
     gap: 8px;
+    width: 100%;
 }
 
 .btn-share:hover {
@@ -1152,8 +1153,8 @@ footer {
                         <button class="btn-share haptic" onclick="shareToTelegramChat()">
                             💬 Поделиться в чат
                         </button>
-                        <button class="btn-share haptic" onclick="copyToClipboard()">
-                            📋 Копировать
+                        <button class="btn-share haptic" onclick="copyToClipboard()" style="background: var(--tg-theme-secondary-bg-color, #6c757d) !important;">
+                            📋 Копировать текст
                         </button>
                     </div>
                 </div>
@@ -1752,20 +1753,18 @@ footer {
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         
         function showNotification(message, type = 'info') {
-            // Можно улучшить для показа уведомлений в Telegram
-            console.log(`[${type}] ${message}`);
+            // Используем Telegram API для уведомлений если доступно
+            if (isTelegramWebApp && tg && tg.showAlert) {
+                tg.showAlert(message);
+            } else {
+                alert(message);
+            }
             
-            // Простой alert для демонстрации
-            if (type === 'error') {
-                if (tg && tg.showAlert) {
-                    tg.showAlert(message);
-                } else {
-                    alert(message);
-                }
+            // Вибрация для ошибок
+            if (type === 'error' && tg && tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
             }
         }
-        
-        // ========== ВАШИ СУЩЕСТВУЮЩИЕ ФУНКЦИИ (с небольшими изменениями) ==========
         
         // Показываем уведомление с вибрацией
         function showAlertWithHaptic(message) {
@@ -1788,14 +1787,20 @@ footer {
             });
             
             // Показать выбранный экран
-            document.getElementById(screenId + '-screen').classList.add('active');
+            const targetScreen = document.getElementById(screenId + '-screen');
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+            }
             
             // Обновить активную вкладку
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            document.querySelector(`.tab[onclick="showScreen('${screenId}')"]`).classList.add('active');
+            const activeTab = document.querySelector(`.tab[onclick*="${screenId}"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
             
             // Обновить контент экрана
             if (screenId === 'calendar') {
@@ -2168,23 +2173,61 @@ footer {
             const sharePreview = document.getElementById('sharePreview');
             const text = sharePreview.textContent;
             
-            if (isTelegramWebApp) {
-                // Отправляем данные в основной чат
+            if (isTelegramWebApp && tg) {
+                // Используем Telegram WebApp API для шаринга
                 const day = currentDate.getDate();
                 const month = currentDate.getMonth();
                 const year = currentDate.getFullYear();
                 
                 const message = `📊 Мой прогресс по привычкам за ${day}.${month + 1}.${year}:\n\n${text}`;
                 
-                // Открываем шар
-                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(message)}`;
-                window.open(shareUrl, '_blank');
+                // Пробуем использовать Telegram WebApp API если доступен
+                if (typeof tg.shareToChat === 'function') {
+                    tg.shareToChat({
+                        text: message
+                    }, (success) => {
+                        if (success) {
+                            showNotification('✅ Прогресс отправлен в чат');
+                        } else {
+                            // Fallback на старый метод
+                            useFallbackSharing(message);
+                        }
+                    });
+                } else {
+                    // Fallback на старый метод
+                    useFallbackSharing(message);
+                }
                 
-                if (tg && tg.HapticFeedback) {
+                if (tg.HapticFeedback) {
                     tg.HapticFeedback.impactOccurred('medium');
                 }
             } else {
-                // Вне Telegram - копируем в буфер
+                // Вне Telegram - используем Web Share API или копируем
+                useWebShareAPI(text);
+            }
+        }
+        
+        function useFallbackSharing(message) {
+            // Старый метод через ссылку share
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(message)}`;
+            window.open(shareUrl, '_blank', 'noopener,noreferrer');
+        }
+        
+        function useWebShareAPI(text) {
+            if (navigator.share) {
+                // Используем Web Share API если доступен
+                navigator.share({
+                    title: 'Мой прогресс по привычкам',
+                    text: text,
+                    url: window.location.href
+                }).then(() => {
+                    showNotification('✅ Прогресс отправлен');
+                }).catch((error) => {
+                    console.log('Ошибка шаринга:', error);
+                    copyToClipboard();
+                });
+            } else {
+                // Fallback на копирование
                 copyToClipboard();
             }
         }
@@ -2193,16 +2236,46 @@ footer {
             const sharePreview = document.getElementById('sharePreview');
             const text = sharePreview.textContent;
             
-            navigator.clipboard.writeText(text).then(() => {
-                showNotification('✅ Текст скопирован в буфер обмена');
-                
-                if (tg && tg.HapticFeedback) {
-                    tg.HapticFeedback.impactOccurred('light');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showNotification('✅ Текст скопирован в буфер обмена');
+                    
+                    if (tg && tg.HapticFeedback) {
+                        tg.HapticFeedback.impactOccurred('light');
+                    }
+                }).catch(err => {
+                    console.error('Ошибка копирования: ', err);
+                    useOldCopyMethod(text);
+                });
+            } else {
+                useOldCopyMethod(text);
+            }
+        }
+        
+        function useOldCopyMethod(text) {
+            // Старый метод для браузеров без Clipboard API
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showNotification('✅ Текст скопирован в буфер обмена');
+                } else {
+                    showNotification('❌ Не удалось скопировать текст');
                 }
-            }).catch(err => {
+            } catch (err) {
                 console.error('Ошибка копирования: ', err);
                 showNotification('❌ Не удалось скопировать текст');
-            });
+            }
+            
+            document.body.removeChild(textarea);
+            
+            if (tg && tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
         }
         
         function generateSharePreview() {
@@ -2338,9 +2411,7 @@ footer {
             });
             
             chartContainer.innerHTML = `
-                <div class="chart-axes">
-                    <div class="x-axis">${xAxisHTML}</div>
-                </div>
+                <div class="x-axis">${xAxisHTML}</div>
                 <div class="chart-bars">${barsHTML}</div>
             `;
         }
@@ -2395,7 +2466,15 @@ footer {
         }
         
         function updateStats() {
-            // Функция для обновления статистики
+            // Функция для обновления статистики в планировщике
+            const statsElement = document.querySelector('#planner-screen .habits-list');
+            if (statsElement && appData.habits.length > 0) {
+                // Обновляем информацию о количестве привычек
+                const habitCount = document.querySelector('#planner-screen h2');
+                if (habitCount) {
+                    habitCount.innerHTML = `Создайте свои привычки <span style="font-size: 14px; color: var(--tg-theme-hint-color);">(${appData.habits.length} привычек)</span>`;
+                }
+            }
         }
         
         // ========== МОДАЛЬНЫЕ ОКНА ==========
@@ -2421,9 +2500,10 @@ footer {
             
             const typeBtns = document.querySelectorAll('#editHabitTypeSelector .habit-type-btn');
             typeBtns.forEach(btn => {
+                const btnText = btn.textContent || btn.innerText;
                 btn.classList.toggle('active', 
-                    (btn.textContent.includes('Чекбокс') && type === 'checkbox') ||
-                    (btn.textContent.includes('Числовое') && type === 'number')
+                    (btnText.includes('Чекбокс') && type === 'checkbox') ||
+                    (btnText.includes('Числовое') && type === 'number')
                 );
             });
             
@@ -2489,8 +2569,11 @@ footer {
         }
         
         function loadBackupList() {
-            // Загрузка списка резервных копий из облака
-            // Реализация зависит от вашей структуры данных
+            const backupList = document.getElementById('backupList');
+            backupList.innerHTML = '<p>Загрузка списка резервных копий...</p>';
+            
+            // Для реализации нужно получить все ключи из CloudStorage
+            // Это сложно сделать в текущем API Telegram
         }
         
         function createNewBackup() {
@@ -2515,7 +2598,6 @@ footer {
                 saveToTelegramCloud();
             }
         }, 60000); // Каждую минуту
-        
     </script>
 </body>
 </html>
