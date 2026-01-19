@@ -65,16 +65,20 @@ body {
 .sidebar {
     position: fixed;
     top: 0;
-    left: -300px;
+    left: -280px;
     width: 280px;
     height: 100%;
     background: var(--tg-theme-secondary-bg-color, #f8f9fa);
-    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
     z-index: 2000;
-    transition: left 0.3s ease;
+    transition: left 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     border-right: 1px solid var(--tg-theme-section-bg-color, #e7e7e7);
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 .sidebar.active {
@@ -92,6 +96,7 @@ body {
     display: none;
     opacity: 0;
     transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
 }
 
 .sidebar-overlay.active {
@@ -178,7 +183,7 @@ body {
 }
 
 .menu-button {
-    position: absolute;
+    position: fixed;
     left: 15px;
     top: 15px;
     background: var(--tg-theme-button-color, #40a7e3);
@@ -194,11 +199,18 @@ body {
     justify-content: center;
     z-index: 100;
     box-shadow: 0 2px 8px rgba(64, 167, 227, 0.3);
+    transition: all 0.3s ease;
 }
 
 .menu-button:hover {
     background: var(--tg-theme-link-color, #168acd);
     transform: scale(1.05);
+}
+
+/* Сдвиг контента для кнопки меню */
+.screen.active {
+    padding-top: 60px; /* Отступ для кнопки меню */
+    animation: fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* ========== TABS (СКРЫТЫ) ========== */
@@ -209,7 +221,7 @@ body {
 /* ========== SCREENS ========== */
 .screen {
     display: none;
-    padding-top: 15px;
+    padding-top: 60px; /* Отступ для кнопки меню */
 }
 
 .screen.active {
@@ -218,8 +230,14 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { 
+        opacity: 0; 
+        transform: translateY(15px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
 }
 
 /* ========== BUTTONS С TELEGRAM ТЕМОЙ ========== */
@@ -950,6 +968,7 @@ footer {
     
     .sidebar {
         width: 260px;
+        left: -260px;
     }
 }
 
@@ -1029,6 +1048,7 @@ footer {
     
     .sidebar {
         width: 240px;
+        left: -240px;
     }
 }
 
@@ -1099,7 +1119,7 @@ footer {
         <div class="content">
             <!-- Экран 1: Планировщик привычек -->
             <div id="planner-screen" class="screen active">
-                <h2>Создайте свои привычки</h2>
+                <h2 style="margin-top: 0;">Создайте свои привычки</h2>
                 <p style="margin: 10px 0 20px; color: var(--tg-theme-hint-color, #6c757d);">Добавьте привычки, которые хотите развивать</p>
                 
                 <div class="add-habit-form">
@@ -1178,7 +1198,7 @@ footer {
             
             <!-- Экран 4: Статистика -->
             <div id="statistics-screen" class="screen">
-                <h2>Статистика выполнения привычек</h2>
+                <h2 style="margin-top: 0;">Статистика выполнения привычек</h2>
                 <p style="margin: 10px 0 20px; color: var(--tg-theme-hint-color, #6c757d);">Анализируйте ваш прогресс</p>
                 
                 <div class="statistics-container">
@@ -1306,6 +1326,9 @@ footer {
         let editingHabitId = null;
         let sidebarOpen = false;
         let activeMenuItem = 'planner';
+        let isSwiping = false;
+        let startX = 0;
+        let startY = 0;
         
         // Данные приложения
         let appData = {
@@ -1459,44 +1482,60 @@ footer {
             }
         }
         
-        // Инициализация свайпов
+        // Инициализация свайпов с улучшенной анимацией
         function initSwipeGestures() {
-            let startX = 0;
-            let startY = 0;
-            let isSwiping = false;
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
             
+            // Обработчик начала свайпа
             document.addEventListener('touchstart', function(e) {
                 if (e.touches.length !== 1) return;
+                
                 startX = e.touches[0].clientX;
                 startY = e.touches[0].clientY;
-                isSwiping = true;
-            }, { passive: true });
+                isSwiping = false;
+                
+                // Если касание у левого края экрана и меню закрыто
+                if (startX < 30 && !sidebarOpen) {
+                    isSwiping = true;
+                    e.preventDefault();
+                }
+                // Если меню открыто и касание в любом месте
+                else if (sidebarOpen) {
+                    isSwiping = true;
+                }
+            }, { passive: false });
             
+            // Обработчик движения при свайпе
             document.addEventListener('touchmove', function(e) {
                 if (!isSwiping || e.touches.length !== 1) return;
+                
+                e.preventDefault();
                 
                 const currentX = e.touches[0].clientX;
                 const currentY = e.touches[0].clientY;
                 const diffX = currentX - startX;
                 const diffY = currentY - startY;
                 
-                // Если горизонтальный свайп больше вертикального
-                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
-                    e.preventDefault();
-                    
-                    const sidebar = document.getElementById('sidebar');
-                    if (diffX > 0 && !sidebarOpen && startX < 50) {
-                        // Свайп слева направо для открытия меню
-                        const translateX = Math.min(diffX, 280);
-                        sidebar.style.transform = `translateX(${translateX}px)`;
-                    } else if (diffX < 0 && sidebarOpen) {
-                        // Свайп справа налево для закрытия меню
-                        const translateX = Math.max(diffX + 280, 0) - 280;
-                        sidebar.style.transform = `translateX(${translateX}px)`;
+                // Если горизонтальное движение больше вертикального
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 5) {
+                    // Открытие меню (свайп слева направо)
+                    if (diffX > 0 && !sidebarOpen && startX < 30) {
+                        const progress = Math.min(diffX / 280, 1);
+                        sidebar.style.transform = `translateX(${progress * 280}px)`;
+                        overlay.style.opacity = (progress * 0.5).toString();
+                        overlay.style.display = 'block';
+                    }
+                    // Закрытие меню (свайп справа налево)
+                    else if (diffX < 0 && sidebarOpen) {
+                        const progress = Math.min(Math.abs(diffX) / 280, 1);
+                        sidebar.style.transform = `translateX(${-(progress * 280)}px)`;
+                        overlay.style.opacity = (0.5 - progress * 0.5).toString();
                     }
                 }
             }, { passive: false });
             
+            // Обработчик окончания свайпа
             document.addEventListener('touchend', function(e) {
                 if (!isSwiping) return;
                 
@@ -1505,25 +1544,42 @@ footer {
                 const diffX = endX - startX;
                 const diffY = endY - startY;
                 
-                const sidebar = document.getElementById('sidebar');
+                // Сброс трансформации
                 sidebar.style.transform = '';
+                overlay.style.opacity = '';
                 
-                // Если горизонтальный свайп больше вертикального
-                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-                    // Свайп слева направо для открытия меню
-                    if (diffX > 50 && !sidebarOpen && startX < 50) {
+                // Определяем, достаточно ли сильный свайп
+                const isSignificantSwipe = Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY);
+                
+                if (isSignificantSwipe) {
+                    // Свайп слева направо для открытия
+                    if (diffX > 0 && !sidebarOpen && startX < 30) {
                         toggleSidebar();
                     }
-                    // Свайп справа налево для закрытия меню
-                    else if (diffX < -50 && sidebarOpen) {
+                    // Свайп справа налево для закрытия
+                    else if (diffX < 0 && sidebarOpen) {
                         toggleSidebar();
+                    }
+                } else {
+                    // Если свайп был незначительный, возвращаем в исходное состояние
+                    if (sidebarOpen) {
+                        overlay.style.display = 'block';
+                    } else {
+                        overlay.style.display = 'none';
                     }
                 }
                 
                 isSwiping = false;
             }, { passive: true });
             
-            // Кнопка "Назад" на устройстве
+            // Закрытие меню при клике на оверлей
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay && sidebarOpen) {
+                    toggleSidebar();
+                }
+            });
+            
+            // Закрытие меню при нажатии кнопки "Назад" на устройстве
             window.addEventListener('popstate', function() {
                 if (sidebarOpen) {
                     toggleSidebar();
@@ -2040,14 +2096,28 @@ footer {
                 const month = currentDate.getMonth();
                 const year = currentDate.getFullYear();
                 
-                const message = `📊 Мой прогресс по привычкам за ${day}.${month + 1}.${year}:\n\n${text}`;
+                const message = `📊 Мой прогресс по привычкам за ${day}.${month + 1}.${year}:\n\n${text}\n\n👉 Используй приложение: https://t.me/Habits_tracker_itlexsvz_bot/habits`;
                 
-                // Используем Telegram Share без URL и параметров
-                const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(message)}`;
-                window.open(shareUrl, '_blank');
-                
-                if (tg && tg.HapticFeedback) {
-                    tg.HapticFeedback.impactOccurred('medium');
+                // Используем Telegram Share API для нативного диалога выбора чата
+                if (tg && tg.shareToChat) {
+                    tg.shareToChat(message, (success) => {
+                        if (success) {
+                            showNotification('✅ Сообщение отправлено');
+                            if (tg.HapticFeedback) {
+                                tg.HapticFeedback.impactOccurred('medium');
+                            }
+                        } else {
+                            showNotification('❌ Не удалось отправить сообщение');
+                        }
+                    });
+                } else {
+                    // Fallback для старых версий Telegram
+                    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(message)}`;
+                    window.open(shareUrl, '_blank', 'noopener,noreferrer');
+                    
+                    if (tg && tg.HapticFeedback) {
+                        tg.HapticFeedback.impactOccurred('medium');
+                    }
                 }
             } else {
                 // Вне Telegram - показываем сообщение
