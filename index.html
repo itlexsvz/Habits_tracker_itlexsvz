@@ -696,16 +696,10 @@ input:focus, select:focus, textarea:focus {
 
 .share-buttons {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.share-buttons-row {
-    display: flex;
-    gap: 10px;
     justify-content: center;
+    gap: 10px;
     flex-wrap: wrap;
+    margin-top: 15px;
 }
 
 /* ========== STATISTICS SCREEN ========== */
@@ -1276,24 +1270,6 @@ footer {
                     <button class="btn btn-secondary haptic" onclick="showScreen('calendar')">← Календарь</button>
                     <button class="btn haptic" onclick="saveToday()">Сохранить</button>
                 </div>
-                
-                <div class="share-section" id="shareSection" style="display: none;">
-                    <h3>Поделиться прогрессом</h3>
-                    <div class="share-preview" id="sharePreview"></div>
-                    <div class="share-buttons">
-                        <div class="share-buttons-row">
-                            <button class="btn-share haptic" onclick="shareViaBot()">
-                                🤖 Отправить через бота
-                            </button>
-                            <button class="btn btn-outline haptic" onclick="copyProgressToClipboard()">
-                                📋 Копировать текст
-                            </button>
-                        </div>
-                        <button class="btn btn-secondary haptic" onclick="shareViaTelegramDirect()" style="margin-top: 5px;">
-                            📤 Поделиться через Telegram
-                        </button>
-                    </div>
-                </div>
             </div>
             
             <!-- Экран 4: Статистика -->
@@ -1376,7 +1352,6 @@ footer {
         // ========== TELEGRAM WEBAPP ИНИЦИАЛИЗАЦИЯ ==========
         let tg = null;
         let isTelegramWebApp = false;
-        const BOT_USERNAME = 'Habits_tracker_itlexsvz_bot';
         
         // Проверяем, запущено ли в Telegram WebApp
         if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
@@ -1469,7 +1444,7 @@ footer {
         // Названия месяцев
         const monthNames = [
             'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-            'Июль', 'Август', 'Сентября', 'Октябрь', 'Ноябрь', 'Декабрь'
+            'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
         ];
         
         // Названия экранов для отображения
@@ -1814,7 +1789,6 @@ footer {
                 generateCalendar();
             } else if (screenId === 'day') {
                 loadToday();
-                generateSharePreview();
             } else if (screenId === 'planner') {
                 updateStats();
             } else if (screenId === 'statistics') {
@@ -2030,7 +2004,6 @@ footer {
             currentDate = selectedDate;
             showScreen('day');
             loadToday();
-            generateSharePreview();
         }
         
         // Изменение месяца
@@ -2115,9 +2088,6 @@ footer {
                     </div>
                 `;
             }
-            
-            const shareSection = document.getElementById('shareSection');
-            shareSection.style.display = appData.habits.length > 0 ? 'block' : 'none';
         }
         
         // Переключение привычки
@@ -2136,7 +2106,6 @@ footer {
             loadToday();
             generateCalendar();
             updateStats();
-            generateSharePreview();
             
             if (tg && tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('light');
@@ -2160,7 +2129,6 @@ footer {
             loadToday();
             generateCalendar();
             updateStats();
-            generateSharePreview();
         }
         
         // Сохранение сегодняшнего дня
@@ -2170,241 +2138,6 @@ footer {
             }
             showNotification('✅ Данные сохранены');
             showScreen('calendar');
-        }
-        
-        // ========== ШАРИНГ ЧЕРЕЗ БОТА ==========
-        function shareViaBot() {
-            generateSharePreview();
-            
-            if (!isTelegramWebApp) {
-                // Если не в Telegram WebApp, предлагаем альтернативу
-                copyProgressToClipboard();
-                return;
-            }
-            
-            // Создаем уникальный ID для этой сессии шаринга
-            const shareId = 'share_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            
-            // Получаем текст прогресса
-            const sharePreview = document.getElementById('sharePreview');
-            const progressText = sharePreview.textContent;
-            
-            // Получаем информацию о пользователе
-            const user = tg.initDataUnsafe.user || {};
-            
-            // Создаем данные для отправки
-            const shareData = {
-                action: 'share_progress',
-                shareId: shareId,
-                userId: user.id || 'unknown',
-                username: user.username || user.first_name || 'Пользователь',
-                date: new Date().toISOString(),
-                progressText: progressText,
-                habitsCount: appData.habits.length,
-                completedHabits: getCompletedHabitsCount()
-            };
-            
-            // Кодируем данные для передачи через параметр start
-            const encodedData = encodeURIComponent(JSON.stringify(shareData));
-            
-            // Формируем ссылку на бота с параметром start
-            const botLink = `https://t.me/${BOT_USERNAME}?start=${encodedData}`;
-            
-            // Сохраняем данные в localStorage для бота
-            localStorage.setItem(`bot_share_${shareId}`, JSON.stringify({
-                ...shareData,
-                timestamp: Date.now()
-            }));
-            
-            // Показываем инструкцию
-            if (tg && tg.showAlert) {
-                tg.showAlert(
-                    '🤖 Отправка через бота\n\n' +
-                    '1. Откроется диалог с ботом\n' +
-                    '2. Нажмите кнопку START или /start\n' +
-                    '3. Бот автоматически отправит ваш прогресс\n' +
-                    '4. Вы сможете переслать сообщение в любой чат\n\n' +
-                    'Бот не добавляет ссылки к сообщению!'
-                );
-            }
-            
-            // Открываем диалог с ботом
-            setTimeout(() => {
-                window.open(botLink, '_blank');
-            }, 500);
-            
-            // Вибрация
-            if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('medium');
-            }
-        }
-        
-        // Получение количества выполненных привычек
-        function getCompletedHabitsCount() {
-            const day = currentDate.getDate();
-            const month = currentDate.getMonth();
-            const year = currentDate.getFullYear();
-            const dayKey = `${year}-${month}-${day}`;
-            const dayData = appData.plan[dayKey] || {};
-            
-            let completedCount = 0;
-            appData.habits.forEach(habit => {
-                const habitData = dayData[habit.id];
-                if (habit.type === 'checkbox' && habitData === true) {
-                    completedCount++;
-                } else if (habit.type === 'number' && habitData && habitData.value > 0) {
-                    completedCount++;
-                }
-            });
-            
-            return completedCount;
-        }
-        
-        // ========== АЛЬТЕРНАТИВНЫЕ СПОСОБЫ ШАРИНГА ==========
-        
-        // Копирование текста в буфер обмена
-        function copyProgressToClipboard() {
-            generateSharePreview();
-            const sharePreview = document.getElementById('sharePreview');
-            const text = sharePreview.textContent;
-            
-            if (copyToClipboard(text)) {
-                // Уведомление об успехе
-                if (tg && tg.showAlert) {
-                    tg.showAlert(
-                        '✅ Текст прогресса скопирован!\n\n' +
-                        'Теперь откройте любой чат Telegram и вставьте его (удерживайте поле ввода → Вставить).'
-                    );
-                } else {
-                    alert('✅ Текст прогресса скопирован в буфер обмена!');
-                }
-                
-                // Вибрация
-                if (tg && tg.HapticFeedback) {
-                    tg.HapticFeedback.impactOccurred('success');
-                }
-                
-                // Визуальная обратная связь
-                const btn = event?.target;
-                if (btn) {
-                    const originalText = btn.innerHTML;
-                    btn.innerHTML = '✅ Скопировано!';
-                    btn.disabled = true;
-                    
-                    setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                    }, 3000);
-                }
-            }
-        }
-        
-        // Прямой шаринг через Telegram (со ссылкой)
-        function shareViaTelegramDirect() {
-            generateSharePreview();
-            const sharePreview = document.getElementById('sharePreview');
-            const text = sharePreview.textContent;
-            
-            // Показываем предупреждение о ссылке
-            if (tg && tg.showConfirm) {
-                tg.showConfirm(
-                    'Telegram добавит ссылку на приложение к сообщению.\n\n' +
-                    'Хотите использовать быструю отправку?',
-                    (confirmed) => {
-                        if (confirmed) {
-                            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/Habits_tracker_itlexsvz_bot')}&text=${encodeURIComponent(text)}`;
-                            window.open(shareUrl, '_blank');
-                        }
-                    }
-                );
-            } else {
-                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/Habits_tracker_itlexsvz_bot')}&text=${encodeURIComponent(text)}`;
-                window.open(shareUrl, '_blank');
-            }
-            
-            if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
-            }
-        }
-        
-        // Функция для копирования текста в буфер обмена
-        function copyToClipboard(text) {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            textArea.style.top = '-999999px';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                console.log('Текст скопирован в буфер обмена');
-                return true;
-            } catch (err) {
-                console.error('Не удалось скопировать текст', err);
-                return false;
-            } finally {
-                document.body.removeChild(textArea);
-            }
-        }
-        
-        // Обновленная функция для генерации текста для шаринга
-        function generateSharePreview() {
-            const sharePreview = document.getElementById('sharePreview');
-            const day = currentDate.getDate();
-            const month = currentDate.getMonth();
-            const year = currentDate.getFullYear();
-            const dayKey = `${year}-${month}-${day}`;
-            const dayData = appData.plan[dayKey] || {};
-            
-            const monthNamesRu = [
-                'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-                'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
-            ];
-            
-            let shareText = `📊 Мой прогресс за ${day} ${monthNamesRu[month]} ${year}\n\n`;
-            
-            let completedCount = 0;
-            let totalCount = appData.habits.length;
-            
-            appData.habits.forEach(habit => {
-                const habitData = dayData[habit.id];
-                let status = '❌ Не выполнено';
-                
-                if (habit.type === 'checkbox' && habitData === true) {
-                    status = '✅ Выполнено';
-                    completedCount++;
-                } else if (habit.type === 'number' && habitData && habitData.value > 0) {
-                    status = `✅ ${habitData.value} ${habit.unit}`;
-                    completedCount++;
-                }
-                
-                shareText += `${habit.name}: ${status}\n`;
-            });
-            
-            const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-            shareText += `\n📈 Прогресс: ${progressPercent}% (${completedCount}/${totalCount})`;
-            
-            // Добавляем мотивационное сообщение
-            if (progressPercent === 100) {
-                shareText += `\n🎉 Отличный день! Все привычки выполнены!`;
-            } else if (progressPercent >= 75) {
-                shareText += `\n👍 Отличная работа!`;
-            } else if (progressPercent >= 50) {
-                shareText += `\n👌 Хороший результат!`;
-            } else if (progressPercent > 0) {
-                shareText += `\n💪 Продолжай в том же духе!`;
-            }
-            
-            shareText += `\n\n#привычки #трекер #прогресс`;
-            
-            sharePreview.textContent = shareText;
-            
-            // Сохраняем текст для других функций
-            window.lastShareText = shareText;
-            return shareText;
         }
         
         // ========== СТАТИСТИКА ==========
