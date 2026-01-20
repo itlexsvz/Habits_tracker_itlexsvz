@@ -696,10 +696,16 @@ input:focus, select:focus, textarea:focus {
 
 .share-buttons {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     gap: 10px;
-    flex-wrap: wrap;
     margin-top: 15px;
+}
+
+.share-buttons-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 /* ========== STATISTICS SCREEN ========== */
@@ -1275,7 +1281,7 @@ footer {
                     <h3>Поделиться прогрессом</h3>
                     <div class="share-preview" id="sharePreview"></div>
                     <div class="share-buttons">
-                        <button class="btn-share haptic" onclick="shareToTelegramChat()">
+                        <button class="btn-share haptic" onclick="shareViaTelegram()">
                             📤 Поделиться через Telegram
                         </button>
                     </div>
@@ -1362,6 +1368,7 @@ footer {
         // ========== TELEGRAM WEBAPP ИНИЦИАЛИЗАЦИЯ ==========
         let tg = null;
         let isTelegramWebApp = false;
+        const BOT_USERNAME = 'Habits_tracker_itlexsvz_bot';
         
         // Проверяем, запущено ли в Telegram WebApp
         if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
@@ -1454,7 +1461,7 @@ footer {
         // Названия месяцев
         const monthNames = [
             'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-            'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+            'Июль', 'Август', 'Сентября', 'Октябрь', 'Ноябрь', 'Декабрь'
         ];
         
         // Названия экранов для отображения
@@ -2157,31 +2164,53 @@ footer {
             showScreen('calendar');
         }
         
-        // ========== TELEGRAM ШАРИНГ ==========
-        function shareToTelegramChat() {
+        // ========== ШАРИНГ ЧЕРЕЗ TELEGRAM ==========
+        function shareViaTelegram() {
             generateSharePreview();
-            const sharePreview = document.getElementById('sharePreview');
-            const text = sharePreview.textContent;
             
-            if (isTelegramWebApp) {
-                const day = currentDate.getDate();
-                const month = currentDate.getMonth();
-                const year = currentDate.getFullYear();
-                
-                const message = `📊 Мой прогресс по привычкам за ${day}.${month + 1}.${year}:\n\n${text}`;
-                
-                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(message)}`;
+            if (!isTelegramWebApp) {
+                // Если не в Telegram WebApp, используем ссылку для шаринга
+                const text = generateSharePreview();
+                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/Habits_tracker_itlexsvz_bot')}&text=${encodeURIComponent(text)}`;
                 window.open(shareUrl, '_blank');
-                
-                if (tg && tg.HapticFeedback) {
-                    tg.HapticFeedback.impactOccurred('medium');
-                }
-            } else {
-                // Вне Telegram - показываем сообщение
-                showAlertWithHaptic('Для шаринга откройте приложение в Telegram');
+                return;
+            }
+            
+            // В Telegram WebApp сразу открываем диалог шаринга
+            const text = generateSharePreview();
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/Habits_tracker_itlexsvz_bot')}&text=${encodeURIComponent(text)}`;
+            
+            // Открываем ссылку для шаринга
+            window.open(shareUrl, '_blank');
+            
+            // Вибрация
+            if (tg && tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
             }
         }
         
+        // Получение количества выполненных привычек
+        function getCompletedHabitsCount() {
+            const day = currentDate.getDate();
+            const month = currentDate.getMonth();
+            const year = currentDate.getFullYear();
+            const dayKey = `${year}-${month}-${day}`;
+            const dayData = appData.plan[dayKey] || {};
+            
+            let completedCount = 0;
+            appData.habits.forEach(habit => {
+                const habitData = dayData[habit.id];
+                if (habit.type === 'checkbox' && habitData === true) {
+                    completedCount++;
+                } else if (habit.type === 'number' && habitData && habitData.value > 0) {
+                    completedCount++;
+                }
+            });
+            
+            return completedCount;
+        }
+        
+        // Обновленная функция для генерации текста для шаринга
         function generateSharePreview() {
             const sharePreview = document.getElementById('sharePreview');
             const day = currentDate.getDate();
@@ -2217,9 +2246,25 @@ footer {
             
             const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
             shareText += `\n📈 Прогресс: ${progressPercent}% (${completedCount}/${totalCount})`;
+            
+            // Добавляем мотивационное сообщение
+            if (progressPercent === 100) {
+                shareText += `\n🎉 Отличный день! Все привычки выполнены!`;
+            } else if (progressPercent >= 75) {
+                shareText += `\n👍 Отличная работа!`;
+            } else if (progressPercent >= 50) {
+                shareText += `\n👌 Хороший результат!`;
+            } else if (progressPercent > 0) {
+                shareText += `\n💪 Продолжай в том же духе!`;
+            }
+            
             shareText += `\n\n#привычки #трекер #прогресс`;
             
             sharePreview.textContent = shareText;
+            
+            // Сохраняем текст для других функций
+            window.lastShareText = shareText;
+            return shareText;
         }
         
         // ========== СТАТИСТИКА ==========
